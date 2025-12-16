@@ -27,6 +27,7 @@ model chess_articles {
   userID      Int
   content     Json        @db.Json
   image       String?
+  category    String?
   chess_users chess_users @relation(fields: [userID], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
