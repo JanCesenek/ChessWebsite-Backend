@@ -30,6 +30,7 @@ model chess_articles {
   category    String?
   round       String?
   teams       String?
+  season      String?
   chess_users chess_users @relation(fields: [userID], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
