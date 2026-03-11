@@ -4,8 +4,8 @@ const { NotAuthError } = require("./errors");
 
 const AUTH_SECRET = `${process.env.AUTH_SECRET}`;
 
-function createJSONToken(username) {
-  return sign({ username }, AUTH_SECRET, { expiresIn: "7d" });
+function createJSONToken({ username, userID }) {
+  return sign({ username, userID }, AUTH_SECRET, { expiresIn: "7d" });
 }
 
 function validateJSONToken(token) {
@@ -27,7 +27,7 @@ function checkAuthMiddleWare(req, res, next) {
   }
   const authFragments = req.headers.authorization.split(" ");
 
-  if (authFragments.length !== 2) {
+  if (authFragments.length !== 2 || authFragments[0] !== "Bearer") {
     console.log("NOT AUTH. AUTH HEADER INVALID.");
     return next(new NotAuthError("Not authenticated."));
   }

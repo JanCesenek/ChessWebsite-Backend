@@ -3,6 +3,8 @@ const { get } = require("../data/user");
 const { createJSONToken, isValidPassword } = require("../util/auth");
 const { isValidPassword: pwCheck, isValidUsername, isValidText } = require("../util/validation");
 const { hash } = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const supabase = require("../util/supabase");
 
 const router = express.Router();
 const prisma = require("./prisma");
@@ -13,7 +15,7 @@ router.post("/signup", async (req, res, next) => {
   let errors = {};
 
   if (!isValidUsername(data.username)) {
-    errors.username = "Invalid username.";
+    errors.username = "Neplatné uživatelské jméno.";
   } else {
     try {
       const existingUser = await prisma.chess_users.findUnique({
@@ -22,27 +24,27 @@ router.post("/signup", async (req, res, next) => {
         },
       });
       if (existingUser) {
-        errors.username = "Username already exists.";
+        errors.username = "Uživatelské jméno již existuje.";
       }
     } catch (error) {}
   }
 
   if (!pwCheck(data.password)) {
-    errors.password = "Invalid password.";
+    errors.password = "Neplatné heslo.";
   }
 
   if (!isValidText(data.firstName)) {
-    errors.firstName = "Invalid first name.";
+    errors.firstName = "Neplatné křestní jméno.";
   }
 
   if (!isValidText(data.lastName)) {
-    errors.lastName = "Invalid last name.";
+    errors.lastName = "Neplatné příjmení.";
   }
 
   if (Object.keys(errors).length > 0) {
     console.log(errors);
     return res.status(422).json({
-      message: "User signup failed due to validation errors.",
+      message: "Registrace uživatele selhala kvůli chybám ve validaci.",
       errors,
     });
   }
@@ -50,13 +52,31 @@ router.post("/signup", async (req, res, next) => {
   data.password = (await hash(data.password, 16)).toString();
 
   try {
-    const createdUser = await prisma.chess_users.create({
-      data,
+    const { data: createdUser, error } = await supabase
+      .from("chess_users")
+      .insert([data])
+      .select("*")
+      .single();
+
+    if (error) {
+      console.log("Nepodařilo se vytvořit uživatele...", error);
+      return res.status(500).json({ message: "Nepodařilo se vytvořit uživatele.", error });
+    }
+
+    const userRecord = await prisma.chess_users.findUnique({
+      where: {
+        username,
+      },
     });
-    const token = createJSONToken(username);
-    res.status(201).json({ message: "User created.", user: createdUser, auth: { token } });
+
+    if (!userRecord) {
+      throw new Error("Nepodařilo se získat ID uživatele.");
+    }
+
+    const token = createJSONToken({ username, userID: userRecord.id });
+    res.status(201).json({ message: "Uživatel vytvořen.", user: createdUser, auth: { token } });
   } catch (error) {
-    console.log("This is where it fucked up!", error);
+    console.log("Tady se něco pokazilo...", error);
     next(error);
   }
 });
@@ -81,7 +101,21 @@ router.post("/login", async (req, res) => {
     });
   }
 
-  const token = createJSONToken(username);
+  const userRecord = await prisma.chess_users.findUnique({
+    where: {
+      username,
+    },
+  });
+
+  if (!userRecord) {
+    return res.status(401).json({ message: "User not found." });
+  }
+
+  const token = createJSONToken({ username, userID: userRecord.id });
+
+  const decodedToken = jwt.decode(token);
+  console.log("Decoded token:", decodedToken);
+
   res.json({ auth: { token } });
 });
 
