@@ -10,7 +10,7 @@ router
   .get(async (_, res) => {
     try {
       const { data, error } = await supabase
-        .from("chess_articles")
+        .from("articles")
         .select("*")
         .order("createdAt", { ascending: false });
 
@@ -37,14 +37,14 @@ router
     }
 
     console.log(req.token);
-    const userMatch = await prisma.chess_users.findFirst({
+    const userMatch = await prisma.users.findFirst({
       where: {
         username: req.token.username,
       },
     });
     if (userMatch && userID === userMatch?.id) {
       const { data, error } = await supabase
-        .from("chess_articles")
+        .from("articles")
         .insert([{ userID, title, content, image, ...rest }]);
 
       if (error) {
@@ -66,11 +66,7 @@ router
   .get(async (req, res) => {
     const id = +req.params.id;
     try {
-      const { data, error } = await supabase
-        .from("chess_articles")
-        .select("*")
-        .eq("id", id)
-        .single();
+      const { data, error } = await supabase.from("articles").select("*").eq("id", id).single();
 
       if (error) {
         console.error("Článek nelze načíst...", error);
@@ -87,7 +83,7 @@ router
     const articleID = +req.params.id;
     const userID = req.token.userID;
     const data = req.body;
-    const article = await prisma.chess_articles.findUnique({
+    const article = await prisma.articles.findUnique({
       where: {
         id: articleID,
       },
@@ -95,7 +91,7 @@ router
     if (article && article?.userID === userID) {
       try {
         const { data: updatedArticle, error } = await supabase
-          .from("chess_articles")
+          .from("articles")
           .update(data)
           .eq("id", articleID)
           .eq("userID", userID)
@@ -123,7 +119,7 @@ router
     const articleID = +req.params.id;
     const userID = req.token.userID;
 
-    const article = await prisma.chess_articles.findUnique({
+    const article = await prisma.articles.findUnique({
       where: {
         id: articleID,
       },
@@ -131,7 +127,7 @@ router
     if (article && article?.userID === userID) {
       try {
         const { data, error } = await supabase
-          .from("chess_articles")
+          .from("articles")
           .delete()
           .eq("id", articleID)
           .eq("userID", userID)

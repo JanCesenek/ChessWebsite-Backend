@@ -18,7 +18,7 @@ router.post("/signup", async (req, res, next) => {
     errors.username = "Neplatné uživatelské jméno.";
   } else {
     try {
-      const existingUser = await prisma.chess_users.findUnique({
+      const existingUser = await prisma.users.findUnique({
         where: {
           username,
         },
@@ -53,7 +53,7 @@ router.post("/signup", async (req, res, next) => {
 
   try {
     const { data: createdUser, error } = await supabase
-      .from("chess_users")
+      .from("users")
       .insert([data])
       .select("*")
       .single();
@@ -63,7 +63,7 @@ router.post("/signup", async (req, res, next) => {
       return res.status(500).json({ message: "Nepodařilo se vytvořit uživatele.", error });
     }
 
-    const userRecord = await prisma.chess_users.findUnique({
+    const userRecord = await prisma.users.findUnique({
       where: {
         username,
       },
@@ -101,7 +101,7 @@ router.post("/login", async (req, res) => {
     });
   }
 
-  const userRecord = await prisma.chess_users.findUnique({
+  const userRecord = await prisma.users.findUnique({
     where: {
       username,
     },

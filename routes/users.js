@@ -10,7 +10,7 @@ const prisma = require("./prisma");
 router.get("/users", async (_, res) => {
   try {
     const { data, error } = await supabase
-      .from("chess_users")
+      .from("users")
       .select("*")
       .order("id", { ascending: false });
 
@@ -32,7 +32,7 @@ router
     const username = req.params.username;
     try {
       const { data, error } = await supabase
-        .from("chess_users")
+        .from("users")
         .select("*")
         .eq("username", username)
         .single();
@@ -90,7 +90,7 @@ router
 
       try {
         const { data: updatedUser, error } = await supabase
-          .from("chess_users")
+          .from("users")
           .update(data)
           .eq("username", req.params.username)
           .select("*")
@@ -117,7 +117,7 @@ router
     if (req.params.username === req.token.username) {
       try {
         const { data: deletedUser, error } = await supabase
-          .from("chess_users")
+          .from("users")
           .delete()
           .eq("username", req.params.username)
           .select("*")
