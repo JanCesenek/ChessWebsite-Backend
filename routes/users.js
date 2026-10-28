@@ -8,11 +8,28 @@ const router = express.Router();
 const prisma = require("./prisma");
 
 router.get("/users", async (_, res) => {
-  try {
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .order("id", { ascending: false });
+
+  if (error) {
+    console.error("Uživatele nelze načíst...", error);
+    return res.status(500).json({ message: "Uživatele nelze načíst...", error });
+  }
+
+  res.json(data);
+});
+
+router
+  .route("/users/:username")
+  .get(async (req, res) => {
+    const username = req.params.username;
     const { data, error } = await supabase
       .from("users")
       .select("*")
-      .order("id", { ascending: false });
+      .eq("username", username)
+      .single();
 
     if (error) {
       console.error("Uživatele nelze načíst...", error);
@@ -20,33 +37,6 @@ router.get("/users", async (_, res) => {
     }
 
     res.json(data);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Uživatele nelze načíst...", error });
-  }
-});
-
-router
-  .route("/users/:username")
-  .get(async (req, res) => {
-    const username = req.params.username;
-    try {
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("username", username)
-        .single();
-
-      if (error) {
-        console.error("Uživatele nelze načíst...", error);
-        return res.status(500).json({ message: "Uživatele nelze načíst...", error });
-      }
-
-      res.json(data);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Uživatele nelze načíst...", error });
-    }
   })
   .patch(checkAuthMiddleWare, async (req, res) => {
     const data = req.body;
@@ -88,24 +78,19 @@ router
         data.password = (await hash(data.password, 16)).toString();
       }
 
-      try {
-        const { data: updatedUser, error } = await supabase
-          .from("users")
-          .update(data)
-          .eq("username", req.params.username)
-          .select("*")
-          .single();
+      const { data: updatedUser, error } = await supabase
+        .from("users")
+        .update(data)
+        .eq("username", req.params.username)
+        .select("*")
+        .single();
 
-        if (error) {
-          console.error("Uživatele nelze aktualizovat...", error);
-          return res.status(500).json({ message: "Uživatele nelze aktualizovat...", error });
-        }
-
-        res.status(201).json({ message: "Uživatel byl úspěšně aktualizován!", updatedUser });
-      } catch (error) {
+      if (error) {
         console.error("Uživatele nelze aktualizovat...", error);
-        res.status(500).json({ message: "Uživatele nelze aktualizovat...", error });
+        return res.status(500).json({ message: "Uživatele nelze aktualizovat...", error });
       }
+
+      res.status(201).json({ message: "Uživatel byl úspěšně aktualizován!", updatedUser });
     } else {
       res.status(401).json({
         message: "Nemáte oprávnění.",
@@ -115,24 +100,19 @@ router
   })
   .delete(checkAuthMiddleWare, async (req, res) => {
     if (req.params.username === req.token.username) {
-      try {
-        const { data: deletedUser, error } = await supabase
-          .from("users")
-          .delete()
-          .eq("username", req.params.username)
-          .select("*")
-          .single();
+      const { data: deletedUser, error } = await supabase
+        .from("users")
+        .delete()
+        .eq("username", req.params.username)
+        .select("*")
+        .single();
 
-        if (error) {
-          console.error("Uživatele nelze smazat...", error);
-          return res.status(500).json({ message: "Uživatele nelze smazat...", error });
-        }
-
-        res.status(201).json({ message: "Uživatel byl úspěšně smazán!", deletedUser });
-      } catch (error) {
+      if (error) {
         console.error("Uživatele nelze smazat...", error);
-        res.status(500).json({ message: "Uživatele nelze smazat...", error });
+        return res.status(500).json({ message: "Uživatele nelze smazat...", error });
       }
+
+      res.status(201).json({ message: "Uživatel byl úspěšně smazán!", deletedUser });
     } else {
       res.status(401).json({
         message: "Nemáte oprávnění.",

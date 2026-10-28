@@ -8,22 +8,16 @@ const prisma = require("./prisma");
 router
   .route("/articles")
   .get(async (_, res) => {
-    try {
-      const { data, error } = await supabase
-        .from("articles")
-        .select("*")
-        .order("createdAt", { ascending: false });
+    const { data, error } = await supabase
+      .from("articles")
+      .select("*")
+      .order("createdAt", { ascending: false });
 
-      if (error) {
-        console.error("Články nelze načíst...", error);
-        return res.status(500).json({ message: "Články nelze načíst...", error });
-      }
-
-      res.json(data);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Články nelze načíst...", error });
+    if (error) {
+      console.error("Články nelze načíst...", error);
+      return res.status(500).json({ message: "Články nelze načíst...", error });
     }
+    res.json(data);
   })
   .post(checkAuthMiddleWare, async (req, res) => {
     const { userID, title, content, image, ...rest } = req.body;
@@ -65,19 +59,13 @@ router
   .route("/articles/:id")
   .get(async (req, res) => {
     const id = +req.params.id;
-    try {
-      const { data, error } = await supabase.from("articles").select("*").eq("id", id).single();
+    const { data, error } = await supabase.from("articles").select("*").eq("id", id).single();
 
-      if (error) {
-        console.error("Článek nelze načíst...", error);
-        return res.status(500).json({ message: "Článek nelze načíst...", error });
-      }
-
-      res.json(data);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Článek nelze načíst...", error });
+    if (error) {
+      console.error("Článek nelze načíst...", error);
+      return res.status(500).json({ message: "Článek nelze načíst...", error });
     }
+    res.json(data);
   })
   .patch(checkAuthMiddleWare, async (req, res) => {
     const articleID = +req.params.id;
@@ -89,25 +77,20 @@ router
       },
     });
     if (article && article?.userID === userID) {
-      try {
-        const { data: updatedArticle, error } = await supabase
-          .from("articles")
-          .update(data)
-          .eq("id", articleID)
-          .eq("userID", userID)
-          .select("*")
-          .single();
+      const { data: updatedArticle, error } = await supabase
+        .from("articles")
+        .update(data)
+        .eq("id", articleID)
+        .eq("userID", userID)
+        .select("*")
+        .single();
 
-        if (error) {
-          console.error("Článek nelze aktualizovat...", error);
-          return res.status(500).json({ message: "Článek nelze aktualizovat...", error });
-        }
-
-        res.json({ message: "Článek byl úspěšně aktualizován!", updatedArticle });
-      } catch (error) {
+      if (error) {
         console.error("Článek nelze aktualizovat...", error);
         return res.status(500).json({ message: "Článek nelze aktualizovat...", error });
       }
+
+      res.json({ message: "Článek byl úspěšně aktualizován!", updatedArticle });
     } else {
       res.status(401).json({
         message: "Nemáte oprávnění.",
@@ -125,24 +108,19 @@ router
       },
     });
     if (article && article?.userID === userID) {
-      try {
-        const { data, error } = await supabase
-          .from("articles")
-          .delete()
-          .eq("id", articleID)
-          .eq("userID", userID)
-          .select("*")
-          .single();
+      const { data, error } = await supabase
+        .from("articles")
+        .delete()
+        .eq("id", articleID)
+        .eq("userID", userID)
+        .select("*")
+        .single();
 
-        if (error) {
-          console.error("Článek nelze smazat...", error);
-          return res.status(500).json({ message: "Článek nelze smazat...", error });
-        }
-        res.status(201).json({ message: "Článek byl úspěšně smazán!", data });
-      } catch (error) {
+      if (error) {
         console.error("Článek nelze smazat...", error);
         return res.status(500).json({ message: "Článek nelze smazat...", error });
       }
+      res.status(201).json({ message: "Článek byl úspěšně smazán!", data });
     } else {
       res.status(401).json({
         message: "Nemáte oprávnění.",

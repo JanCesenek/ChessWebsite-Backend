@@ -6,6 +6,7 @@ const cheerio = require("cheerio");
 const articlesRoutes = require("../routes/articles");
 const authRoutes = require("../routes/auth");
 const usersRoutes = require("../routes/users");
+const linkRoutes = require("../routes/link");
 const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
 const app = express();
@@ -25,7 +26,7 @@ app.use(bodyParser.urlencoded({ limit: "1mb", extended: true }));
 app.use(express.json({ limit: "1mb" }));
 
 app.get("/api/chess-table", async (_, res) => {
-  const url = "https://www.chess.cz/soutez/3291";
+  const url = "https://www.chess.cz/soutez/3446";
   const response = await fetch(url);
   const html = await response.text();
   const $ = cheerio.load(html);
@@ -35,7 +36,7 @@ app.get("/api/chess-table", async (_, res) => {
 });
 
 app.get("/api/chess-table-2", async (_, res) => {
-  const url = "https://www.chess.cz/soutez/3293";
+  const url = "https://www.chess.cz/soutez/3448";
   const response = await fetch(url);
   const html = await response.text();
   const $ = cheerio.load(html);
@@ -45,7 +46,7 @@ app.get("/api/chess-table-2", async (_, res) => {
 });
 
 app.get("/api/chess-table-3", async (_, res) => {
-  const url = "https://www.chess.cz/soutez/3295";
+  const url = "https://www.chess.cz/soutez/3451";
   const response = await fetch(url);
   const html = await response.text();
   const $ = cheerio.load(html);
@@ -57,6 +58,7 @@ app.get("/api/chess-table-3", async (_, res) => {
 app.use(articlesRoutes);
 app.use(authRoutes);
 app.use(usersRoutes);
+app.use(linkRoutes);
 
 app.listen(port, () => {
   console.log(`App running on port ${port}`);
