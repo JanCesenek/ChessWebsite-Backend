@@ -38,4 +38,5 @@ model link {
   id   BigInt   @id @default(autoincrement())
   date DateTime @db.Timestamp(6)
   url  String
+  name String?
 }

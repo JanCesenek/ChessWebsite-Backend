@@ -5,19 +5,40 @@ const supabase = require("../util/supabase");
 const router = express.Router();
 const prisma = require("./prisma");
 
-router.get("/link", async (_, res) => {
-  const { data, error } = await supabase
-    .from("link")
-    .select("*")
-    .order("createdAt", { ascending: false });
+router
+  .route("/link")
+  .get(async (_, res) => {
+    const { data, error } = await supabase
+      .from("link")
+      .select("*")
+      .order("createdAt", { ascending: false });
 
-  if (error) {
-    console.error("Odkazy nelze načíst...", error);
-    return res.status(500).json({ message: "Odkazy nelze načíst...", error });
-  }
+    if (error) {
+      console.error("Odkazy nelze načíst...", error);
+      return res.status(500).json({ message: "Odkazy nelze načíst...", error });
+    }
 
-  res.json(data);
-});
+    res.json(data);
+  })
+  .post(checkAuthMiddleWare, async (req, res) => {
+    const { date, url, name, ...rest } = req.body;
+    const invalid = !date || !url || !name;
+
+    if (invalid) {
+      return res.status(400).json({
+        message: "Některé z povinných polí nebyly vyplněny!",
+        error: "Chybí povinná pole!",
+      });
+    }
+
+    const { data, error } = await supabase.from("link").insert([{ date, url, name, ...rest }]);
+
+    if (error) {
+      console.error("Odkaz nelze vytvořit...", error);
+      return res.status(500).json({ message: "Odkaz nelze vytvořit...", error });
+    }
+    res.status(201).json({ message: "Odkaz byl úspěšně vytvořen!", data });
+  });
 
 router.patch("/link/:id", checkAuthMiddleWare, async (req, res) => {
   const id = +req.params.id;

@@ -1,7 +1,5 @@
 const { NotFoundError } = require("../util/errors");
-const { PrismaClient } = require("@prisma/client");
-
-const prisma = new PrismaClient();
+const prisma = require("../routes/prisma");
 
 async function get(username) {
   const user = await prisma.users.findUnique({
