@@ -11,7 +11,7 @@ router
     const { data, error } = await supabase
       .from("link")
       .select("*")
-      .order("createdAt", { ascending: false });
+      .order("date", { ascending: false });
 
     if (error) {
       console.error("Odkazy nelze načíst...", error);
